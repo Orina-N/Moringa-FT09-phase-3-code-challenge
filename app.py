@@ -1,5 +1,6 @@
 from database.setup import create_tables
 from database.connection import get_db_connection
+from models.conn2 import CONN2,CURSOR2
 from models.article import Article
 from models.author import Author
 from models.magazine import Magazine

@@ -1,4 +1,5 @@
-from conn2 import CONN2, CURSOR2
+
+from models.conn import conn,cursor
 
 class Author:
     def __init__(self, name, id=None):
@@ -27,15 +28,15 @@ class Author:
         sql = """
         INSERT INTO authors (name) VALUES (?)
         """
-        CURSOR2.execute(sql, (self.name,))
-        CONN2.commit()
-        self.id = CURSOR2.lastrowid
+        cursor.execute(sql, (self.name,))
+        conn.commit()
+        self.id = cursor.lastrowid
 
     @classmethod
     def create(cls, name):
         sql = "SELECT id FROM authors WHERE name = ?"
-        CURSOR2.execute(sql, (name,))
-        result = CURSOR2.fetchone()
+        cursor.execute(sql, (name,))
+        result = cursor.fetchone()
         if result:
             author_id = result[0]
             return cls(name, id=author_id)
@@ -50,8 +51,8 @@ class Author:
          FROM articles
          WHERE articles.author_id = ?
         """
-        CURSOR2.execute(sql, (self.id,))
-        article_titles = [row[0] for row in CURSOR2.fetchall()]
+        cursor.execute(sql, (self.id,))
+        article_titles = [row[0] for row in cursor.fetchall()]
         return article_titles
 
     def magazines(self):
@@ -61,12 +62,11 @@ class Author:
         INNER JOIN magazines ON articles.magazine_id = magazines.id
         WHERE articles.author_id = ?
         """
-        CURSOR2.execute(sql, (self.id,))
-        magazine_names = [row[0] for row in CURSOR2.fetchall()]
+        cursor.execute(sql, (self.id,))
+        magazine_names = [row[0] for row in cursor.fetchall()]
         return magazine_names
 
     def __repr__(self):
         return f'<Author {self.name}>'
 
-author_1 = Author.create("Jane Doe")
-print(author_1.magazines())
+

@@ -1,4 +1,4 @@
-from conn2 import CONN2, CURSOR2
+from models.conn import conn, cursor
 
 class Magazine:
     def __init__(self, name, category, id = None):
@@ -26,13 +26,13 @@ class Magazine:
         CONSTRAINT unique_name_category UNIQUE (name, category)
         );
         """
-        CURSOR2.execute(sql)
-        CONN2.commit()
+        cursor.execute(sql)
+        conn.commit()
 
     @classmethod
     def drop_table(cls):
-        CURSOR2.execute("DROP TABLE IF EXISTS magazines")
-        CONN2.commit()
+        cursor.execute("DROP TABLE IF EXISTS magazines")
+        conn.commit()
 
     @property
     def id(self):
@@ -48,8 +48,8 @@ class Magazine:
     def name(self):
         if self._id is not None:
             sql = "SELECT name FROM magazines WHERE id = ?"
-            CURSOR2.execute(sql, (self.id,))
-            result = CURSOR2.fetchone()
+            cursor.execute(sql, (self.id,))
+            result = cursor.fetchone()
             if result:
                  return result[0]
         return self._name
@@ -67,8 +67,8 @@ class Magazine:
     def category(self):
         if self._id is not None:
             sql = "SELECT category FROM magazines WHERE id = ?"
-            CURSOR2.execute(sql, (self.id,))
-            result = CURSOR2.fetchone()
+            cursor.execute(sql, (self.id,))
+            result = cursor.fetchone()
             if result:
                 return result[0]
         return self._category
@@ -83,15 +83,15 @@ class Magazine:
 
     def save(self):
         sql = "INSERT INTO magazines(name,category)VALUES(?,?)"
-        CURSOR2.execute(sql, (self.name, self.category))
-        CONN2.commit()
-        self.id = CURSOR2.lastrowid
+        cursor.execute(sql, (self.name, self.category))
+        conn.commit()
+        self.id = cursor.lastrowid
 
     @classmethod
     def create(cls, name, category):
         sql = "SELECT id FROM magazines WHERE name = ? AND category = ?"
-        CURSOR2.execute(sql, (name, category))
-        existing_magazine = CURSOR2.fetchone()
+        cursor.execute(sql, (name, category))
+        existing_magazine = cursor.fetchone()
         if existing_magazine:
             raise ValueError("A magazine with the same name and category already exists")
     
@@ -102,8 +102,8 @@ class Magazine:
         
     def articles(self):
         sql = "SELECT title FROM articles WHERE magazine_id = ?"
-        CURSOR2.execute(sql, (self.id,))
-        result = CURSOR2.fetchall()
+        cursor.execute(sql, (self.id,))
+        result = cursor.fetchall()
         article_titles = [row[0] for row in result]
         return article_titles
 
@@ -114,14 +114,14 @@ class Magazine:
         INNER JOIN authors ON articles.author_id = authors.id
         WHERE articles.magazine_id = ?
         """
-        CURSOR2.execute(sql, (self.id,))
-        contributor_names = [row[0] for row in CURSOR2.fetchall()]
+        cursor.execute(sql, (self.id,))
+        contributor_names = [row[0] for row in cursor.fetchall()]
         return contributor_names
 
     def article_titles(self):
         sql = "SELECT title FROM articles WHERE magazine_id = ?"
-        CURSOR2.execute(sql, (self.id,))
-        article_titles = [row[0] for row in CURSOR2.fetchall()]
+        cursor.execute(sql, (self.id,))
+        article_titles = [row[0] for row in cursor.fetchall()]
         return article_titles
 
     def contributing_authors(self):
@@ -133,8 +133,8 @@ class Magazine:
             GROUP BY authors.id
             HAVING COUNT(*) > 2
             """
-        CURSOR2.execute(sql, (self.id,))
-        authors_data = CURSOR2.fetchall()
+        cursor.execute(sql, (self.id,))
+        authors_data = cursor.fetchall()
 
         # Check if there are any authors with more than 2 publications
         if not authors_data:
@@ -151,18 +151,3 @@ class Magazine:
     def __repr__(self):
         return f'<Magazine {self.name}>'
 
-
-
-try:
-    magazine_2 = Magazine.create("WL Asia", "Wildlife")
-    print(magazine_2.contributing_authors())
-except ValueError:
-    # Magazine already exists, retrieve existing magazine instead
-    sql = "SELECT id FROM magazines WHERE name = ? AND category = ?"
-    CURSOR2.execute(sql, ("WL Africa", "Wildlife"))
-    magazine_id = CURSOR2.fetchone()[0]
-    magazine_1 = Magazine(name="WL Africa", category="Wildlife", id=magazine_id)
-    print(magazine_1.contributing_authors())
-
-
-print(magazine_2.contributing_authors())
